@@ -1,5 +1,4 @@
-using Documenter, NestedGraphsIO, NestedGraphs, GraphIO, Graphs
-import NestedGraphs: NestedGraphFormat
+using Documenter, NestedGraphsIO
 
 makedocs(sitename="NestedGraphsIO.jl",
     pages = [
@@ -8,3 +7,7 @@ makedocs(sitename="NestedGraphsIO.jl",
         "API" => "API.md"
     ],
     modules=[NestedGraphsIO])
+
+deploydocs(
+    repo = "github.com/UniStuttgart-IKR/NestedGraphsIO.jl.git",
+)
