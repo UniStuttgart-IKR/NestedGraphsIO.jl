@@ -12,6 +12,7 @@ MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
 NestedGraphs = "03c36417-ddab-428a-818d-5359aee292ef"
 
 [compat]
+DocStringExtensions = "0.9"
 julia = "1"
 
 [extras]
