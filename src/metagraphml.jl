@@ -33,20 +33,23 @@ edgedefaults(keyprops::Dict{String, AttrKey}) = Iterators.filter(v -> getfield(v
 function addmetagraphmlnode!(gr::AbstractGraph, node::EzXML.Node, defaults::Vector{AttrKey}, keyprops::Dict{String, AttrKey}, ns::String)
     add_vertex!(gr)
     i = length(vertices(gr))
-    set_prop!(gr, i, :id, node["id"])
+    set_prop!(gr, i, :id, string(node["id"]))
     for def in defaults
         set_prop!(gr, i, Symbol(def.name), def.default)
     end
     for data in findall("x:data", node, ["x"=>ns])
-        set_prop!(gr, i, Symbol(keyprops[data["key"]].name), keyprops[data["key"]].type == String ? strip(nodecontent(data)) : parse(keyprops[data["key"]].type, nodecontent(data)))
+        key = keyprops[data["key"]]
+        set_prop!(gr, i, Symbol(key.name), key.type == String || key.name == "id"  ? strip(nodecontent(data)) : parse(key.type, nodecontent(data)))
     end
 end
 
 function addmetagraphmledge!(gr::AbstractGraph, edge::EzXML.Node, defaults::Vector{AttrKey}, keyprops::Dict{String, AttrKey}, ns::String)
-    srcnode = gr[edge["source"],:id]
-    trgnode = gr[edge["target"],:id]
+    srcnode = gr[string(edge["source"]),:id]
+    trgnode = gr[string(edge["target"]),:id]
     add_edge!(gr, srcnode, trgnode)
-    set_prop!(gr, srcnode, trgnode, :id, edge["id"])
+    if haskey(edge, "id")
+        set_prop!(gr, srcnode, trgnode, :id, string(edge["id"]))
+    end
     for def in defaults
         set_prop!(gr, srcnode, trgnode, Symbol(def.name), def.default)
     end
@@ -79,7 +82,15 @@ end
 function _loadmetagraph_fromnode(graphnode::EzXML.Node, keyprops::Dict{String, AttrKey})
     ns = namespace(graphnode)
     gr = instantiatemetagraph(graphnode)
-    set_prop!(gr, :id, graphnode["id"])
+    if haskey(graphnode, "id")
+        set_prop!(gr, :id, string(graphnode["id"]))
+    end
+
+    for data in findall("x:data", graphnode, ["x"=>ns])
+        key = keyprops[data["key"]]
+        set_prop!(gr, Symbol(key.name), key.type == String || key.name == "id"  ? strip(nodecontent(data)) : parse(key.type, nodecontent(data)))
+    end
+
     set_indexing_prop!(gr, :id)
     for (i,node) in enumerate(findall("x:node", graphnode, ["x"=>ns]))
         addmetagraphmlnode!(gr, node, nodedefaults(keyprops), keyprops, ns)
@@ -110,9 +121,12 @@ function loadmetagraphml_mult(io::IO)
 
     graphnodes = findall("//x:graph", doc.root, ["x"=>ns])
 
+    gcount = 1
+
     graphs = Dict{String, AbstractMetaGraph}()
     for graphnode in graphnodes
-        graphs[graphnode["id"]] = _loadmetagraph_fromnode(graphnode, keyprops)
+        gkey = haskey(graphnode, "id") ? string(graphnode["id"]) : string("graph", gcount)
+        graphs[gkey] = _loadmetagraph_fromnode(graphnode, keyprops)
      end
     return graphs
 end
