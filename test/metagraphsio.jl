@@ -36,5 +36,9 @@
     end
     rm(ftname)
 
-   # Write your tests here.
+   # ITZ graphml
+    ftname = joinpath(testdir, "testdata", "ITZ_Aarnet.graphml")
+    dmg2 = open(ftname, "r") do io
+        loadgraphs(io, GraphMLFormat(), MGFormat())
+    end
 end

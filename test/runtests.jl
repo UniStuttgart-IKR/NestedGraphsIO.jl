@@ -14,5 +14,7 @@ testdir = dirname(@__FILE__)
 include("testutils.jl")
 
 @testset "NestedGraphsIO.jl" begin
-    @includetests ["metagraphsio", "nestedgraphsio"]
+    foreach(["metagraphsio.jl", "nestedgraphsio.jl"]) do x
+        include(x)
+    end
 end

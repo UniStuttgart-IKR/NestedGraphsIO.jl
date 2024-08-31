@@ -63,17 +63,19 @@ function _get_key_props(doc::EzXML.Document)
     keynodes = findall("//x:key", doc.root, ["x"=>ns])
     keyprops = Dict{String,AttrKey}()
     for keynode in keynodes
-        attrtype = graphMLAttributesType[strip(keynode["attr.type"])]
-        keyadded = false
-        for childnode in EzXML.eachnode(keynode)
-            if EzXML.nodename(childnode) == "default"
-                defaultcontent = strip(nodecontent(childnode))
-                keyprops[keynode["id"]] = AttrKey(keynode["id"], keynode["attr.name"], graphlMLAttributesDomain[keynode["for"]], attrtype, attrtype == String ? defaultcontent : parse(attrtype, defaultcontent) )
-                keyadded = true
+        if any(x -> nodename(x)=="attr.type",attributes(keynode))
+            attrtype = graphMLAttributesType[strip(keynode["attr.type"])]
+            keyadded = false
+            for childnode in EzXML.eachnode(keynode)
+                if EzXML.nodename(childnode) == "default"
+                    defaultcontent = strip(nodecontent(childnode))
+                    keyprops[keynode["id"]] = AttrKey(keynode["id"], keynode["attr.name"], graphlMLAttributesDomain[keynode["for"]], attrtype, attrtype == String ? defaultcontent : parse(attrtype, defaultcontent) )
+                    keyadded = true
+                end
             end
-        end
-        if !keyadded
-            keyprops[keynode["id"]] = AttrKey(keynode["id"], keynode["attr.name"], graphlMLAttributesDomain[keynode["for"]], attrtype, nothing )
+            if !keyadded
+                keyprops[keynode["id"]] = AttrKey(keynode["id"], keynode["attr.name"], graphlMLAttributesDomain[keynode["for"]], attrtype, nothing )
+            end
         end
     end
     return keyprops
